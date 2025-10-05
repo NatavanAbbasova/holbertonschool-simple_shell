@@ -1,34 +1,11 @@
 #include "shell.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <unistd.h>
 #include <sys/wait.h>
-#include <ctype.h>
+#include <string.h>
 
-/* Trim leading and trailing whitespace */
-char *trim(char *str)
-{
-	char *end;
-
-	/* Trim leading space */
-	while (isspace((unsigned char)*str))
-		str++;
-
-	if (*str == 0)  /* All spaces? */
-		return str;
-
-	/* Trim trailing space */
-	end = str + strlen(str) - 1;
-	while (end > str && isspace((unsigned char)*end))
-		end--;
-
-	*(end + 1) = '\0';
-
-	return str;
-}
-
-/* Display prompt and execute commands */
+/* Shell main loop */
 void shell_loop(void)
 {
 	char *line = NULL;
@@ -43,17 +20,17 @@ void shell_loop(void)
 			write(STDOUT_FILENO, "$ ", 2);
 
 		nread = getline(&line, &len, stdin);
-		if (nread == -1)  /* EOF or error */
+		if (nread == -1)  /* EOF */
 		{
 			free(line);
 			write(STDOUT_FILENO, "\n", 1);
 			exit(EXIT_SUCCESS);
 		}
 
-		line[nread - 1] = '\0';  /* remove newline */
-		line = trim(line);
+		if (line[nread - 1] == '\n')
+			line[nread - 1] = '\0'; /* remove newline */
 
-		if (line[0] == '\0')  /* skip empty lines */
+		if (line[0] == '\0') /* skip empty input */
 			continue;
 
 		pid = fork();
@@ -62,17 +39,15 @@ void shell_loop(void)
 			perror("fork");
 			continue;
 		}
+
 		if (pid == 0)  /* child */
 		{
 			char *argv[] = {line, NULL};
 			execve(line, argv, environ);
-			perror(line);  /* execve failed */
-			_exit(EXIT_FAILURE);
+			fprintf(stderr, "%s: 1: %s: not found\n", argv[0], argv[0]);
+			_exit(127);
 		}
 		else  /* parent */
-		{
 			waitpid(pid, &status, 0);
-		}
 	}
 }
-
