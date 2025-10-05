@@ -1,38 +1,54 @@
 #include "shell.h"
-
-extern char **environ;
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 
 /**
- * execute_command - Executes a command using fork and execve
+ * execute_command - executes a command using execve
  * @cmd: command string
+ * @envp: environment variables
  */
-void execute_command(char *cmd)
+void execute_command(char *cmd, char **envp)
 {
-	pid_t pid;
-	char *argv[2];
+    char *argv[1024];
+    int i = 0;
+    char *token;
+    pid_t pid;
+    int status;
 
-	argv[0] = cmd;
-	argv[1] = NULL;
+    /* tokenize the command */
+    token = strtok(cmd, " \t");
+    while (token != NULL && i < 1023)
+    {
+        argv[i++] = token;
+        token = strtok(NULL, " \t");
+    }
+    argv[i] = NULL;
 
-	pid = fork();
-	if (pid == -1)
-	{
-		perror("./hsh");
-		return;
-	}
-	if (pid == 0)
-	{
-		/* child process */
-		if (execve(argv[0], argv, environ) == -1)
-		{
-			fprintf(stderr, "./hsh: 1: %s: not found\n", cmd);
-			exit(EXIT_FAILURE);
-		}
-	}
-	else
-	{
-		/* parent process waits for child */
-		waitpid(pid, NULL, 0);
-	}
+    if (argv[0] == NULL)
+        return;
+
+    pid = fork();
+    if (pid == -1)
+    {
+        perror("fork");
+        return;
+    }
+    if (pid == 0)
+    {
+        /* child process */
+        if (execve(argv[0], argv, envp) == -1)
+        {
+            perror(argv[0]);
+            _exit(1);
+        }
+    }
+    else
+    {
+        waitpid(pid, &status, 0);
+    }
 }
 
