@@ -3,18 +3,14 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <unistd.h>
+#include <string.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <errno.h>
 
-extern char **environ;
-
-char *prompt_and_read(void);
-char **split_line(char *line);
-char *find_command(char *cmd);
-int execute_cmd(char **argv_exec);
+void print_prompt(void);
+void execute_command(char *cmd);
 
 #endif /* SHELL_H */
 
