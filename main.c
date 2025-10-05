@@ -15,21 +15,25 @@ int main(int argc, char **argv, char **envp)
 
 	(void)argc;
 	(void)argv;
-	(void)envp;
 
 	while (1)
 	{
-		print_prompt();
+		/* print shell prompt */
+		write(1, "$ ", 2);
 
 		read = getline(&line, &len, stdin);
 		if (read == -1)
 			break;
 
-		line[strcspn(line, "\n")] = '\0'; /* remove trailing newline */
+		/* remove trailing newline */
+		line[read - 1] = '\0';
+
+		/* ignore empty input */
 		if (line[0] == '\0')
 			continue;
 
-		execute_command(line);
+		/* execute the command */
+		execute_command(line, envp);
 	}
 
 	free(line);
