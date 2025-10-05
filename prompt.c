@@ -5,6 +5,8 @@
 #include <sys/wait.h>
 #include <string.h>
 
+extern char **environ;  /* needed for execve */
+
 /* Shell main loop */
 void shell_loop(void)
 {
@@ -42,7 +44,10 @@ void shell_loop(void)
 
 		if (pid == 0)  /* child */
 		{
-			char *argv[] = {line, NULL};
+			char *argv[2];
+			argv[0] = line;
+			argv[1] = NULL;
+
 			execve(line, argv, environ);
 			fprintf(stderr, "%s: 1: %s: not found\n", argv[0], argv[0]);
 			_exit(127);
