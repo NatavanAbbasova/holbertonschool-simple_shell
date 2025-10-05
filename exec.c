@@ -1,19 +1,37 @@
 #include "shell.h"
 
+extern char **environ;
+
 /**
- * execute_command - executes a command using execve
+ * execute_command - Executes a command using fork and execve
  * @cmd: command string
  */
 void execute_command(char *cmd)
 {
+	pid_t pid;
 	char *argv[2];
 
 	argv[0] = cmd;
 	argv[1] = NULL;
 
-	if (execve(argv[0], argv, NULL) == -1)
+	pid = fork();
+	if (pid == -1)
 	{
 		perror("./hsh");
-		exit(EXIT_FAILURE);
+		return;
+	}
+	if (pid == 0)
+	{
+		/* child process */
+		if (execve(argv[0], argv, environ) == -1)
+		{
+			fprintf(stderr, "./hsh: 1: %s: not found\n", cmd);
+			exit(EXIT_FAILURE);
+		}
+	}
+	else
+	{
+		/* parent process waits for child */
+		waitpid(pid, NULL, 0);
 	}
 }

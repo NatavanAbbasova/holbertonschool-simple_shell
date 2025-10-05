@@ -1,48 +1,35 @@
 #include "shell.h"
 
 /**
- * main - simple shell entry point
+ * main - entry point for the shell
+ * @argc: argument count
+ * @argv: argument vector
+ * @envp: environment pointer
  * Return: 0 on success
  */
-int main(void)
+int main(int argc, char **argv, char **envp)
 {
 	char *line = NULL;
 	size_t len = 0;
-	ssize_t nread;
-	pid_t pid;
-	int status;
+	ssize_t read;
+
+	(void)argc;
+	(void)argv;
+	(void)envp;
 
 	while (1)
 	{
 		print_prompt();
 
-		nread = getline(&line, &len, stdin);
-		if (nread == -1)
-		{
-			printf("\n");
+		read = getline(&line, &len, stdin);
+		if (read == -1)
 			break;
-		}
 
-		if (line[nread - 1] == '\n')
-			line[nread - 1] = '\0';
-
-		if (strcmp(line, "") == 0)
+		line[strcspn(line, "\n")] = '\0'; /* remove trailing newline */
+		if (line[0] == '\0')
 			continue;
 
-		pid = fork();
-		if (pid == -1)
-		{
-			perror("fork");
-			exit(EXIT_FAILURE);
-		}
-		else if (pid == 0)
-		{
-			execute_command(line);
-		}
-		else
-		{
-			waitpid(pid, &status, 0);
-		}
+		execute_command(line);
 	}
 
 	free(line);
