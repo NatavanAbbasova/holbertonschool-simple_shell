@@ -1,4 +1,8 @@
 #include "shell.h"
+#include <stdio.h>   /* for getline */
+#include <stdlib.h>  /* for free */
+#include <string.h>  /* for strcspn */
+#include <stddef.h>  /* for NULL, size_t */
 
 /**
  * main - entry point for the shell
@@ -9,34 +13,29 @@
  */
 int main(int argc, char **argv, char **envp)
 {
-	char *line = NULL;
-	size_t len = 0;
-	ssize_t read;
+    char *line = NULL;
+    size_t len = 0;
+    ssize_t read;
 
-	(void)argc;
-	(void)argv;
+    (void)argc;
+    (void)argv;
 
-	while (1)
-	{
-		/* print shell prompt */
-		write(1, "$ ", 2);
+    while (1)
+    {
+        print_prompt();
 
-		read = getline(&line, &len, stdin);
-		if (read == -1)
-			break;
+        read = getline(&line, &len, stdin);
+        if (read == -1)
+            break;
 
-		/* remove trailing newline */
-		line[read - 1] = '\0';
+        line[strcspn(line, "\n")] = '\0'; /* remove trailing newline */
+        if (line[0] == '\0')
+            continue;
 
-		/* ignore empty input */
-		if (line[0] == '\0')
-			continue;
+        execute_command(line, envp);
+    }
 
-		/* execute the command */
-		execute_command(line, envp);
-	}
-
-	free(line);
-	return (0);
+    free(line);
+    return (0);
 }
 
